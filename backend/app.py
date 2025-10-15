@@ -107,19 +107,32 @@ aws_region = os.getenv("aws_region", "us-east-1")
 bucket_name = os.getenv("bucket_name")
 llm_provider = os.getenv("llm_provider", "openai")  # "openai" or "bedrock"
 
-credentials = service_account.Credentials.from_service_account_file(
-    "./ai-interview-poc-2b5cf8540f16.json"
-)
+# Initialize Google models only if credentials are provided
+model_vertexai = None
+model = None
 
-vertexai.init(
-    project=gcp_project_id_str, credentials=credentials, location="us-central1"
-)
+if gemini_api_key_str and gcp_project_id_str:
+    try:
+        credentials = service_account.Credentials.from_service_account_file(
+            "./ai-interview-poc-2b5cf8540f16.json"
+        )
 
-model_vertexai = GenerativeModel("gemini-2.0-flash")
+        vertexai.init(
+            project=gcp_project_id_str, credentials=credentials, location="us-central1"
+        )
 
-genai.configure(api_key=gemini_api_key_str)
+        model_vertexai = GenerativeModel("gemini-2.0-flash")
 
-model = genai.GenerativeModel("gemini-2.0-flash")
+        genai.configure(api_key=gemini_api_key_str)
+
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        
+        print("Google models initialized successfully")
+    except Exception as e:
+        print(f"Warning: Could not initialize Google models: {e}")
+        print("Multimodal features (image, audio, video processing) will be disabled")
+else:
+    print("Google credentials not provided. Multimodal features will be disabled.")
 
 connection = sqlite3.connect("sqlite_data.db")
 
@@ -262,6 +275,154 @@ def get_llm():
         return ChatOpenAI(model="gpt-4o", api_key=openai_api_key_str)
 
 llm = get_llm()
+
+def get_multimodal_llm():
+    """
+    Get multimodal LLM based on provider
+    AWS Bedrock Claude models support vision (images + text)
+    """
+    if llm_provider.lower() == "bedrock":
+        from langchain_aws import ChatBedrock
+        return ChatBedrock(
+            model_id="anthropic.claude-3-sonnet-20240229-v1:0",  # Supports vision
+            region_name=aws_region,
+            model_kwargs={
+                "max_tokens": 4096,
+                "temperature": 0.1,
+                "top_p": 0.9,
+            }
+        )
+    else:
+        # Use Google models for multimodal processing
+        return {
+            "genai_model": model,
+            "vertexai_model": model_vertexai
+        }
+
+def process_image_with_bedrock(image_bytes: bytes, prompt: str) -> str:
+    """
+    Process image using AWS Bedrock Claude with vision capabilities
+    """
+    import base64
+    import json
+    import boto3
+    
+    if aws_access_key_id_str and aws_secret_access_key_str:
+        bedrock_client = boto3.client(
+            'bedrock-runtime',
+            aws_access_key_id=aws_access_key_id_str,
+            aws_secret_access_key=aws_secret_access_key_str,
+            region_name=aws_region
+        )
+    else:
+        bedrock_client = boto3.client('bedrock-runtime', region_name=aws_region)
+    
+    # Encode image to base64
+    image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+    
+    # Prepare the request for Claude 3 Sonnet with vision
+    request_body = {
+        "anthropic_version": "bedrock-2023-05-31",
+        "max_tokens": 4096,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": "image/jpeg",
+                            "data": image_base64
+                        }
+                    },
+                    {
+                        "type": "text",
+                        "text": prompt
+                    }
+                ]
+            }
+        ]
+    }
+    
+    try:
+        response = bedrock_client.invoke_model(
+            modelId="anthropic.claude-3-sonnet-20240229-v1:0",
+            body=json.dumps(request_body)
+        )
+        
+        response_body = json.loads(response['body'].read())
+        return response_body['content'][0]['text']
+    
+    except Exception as e:
+        print(f"Error processing image with Bedrock: {e}")
+        raise e
+
+def process_audio_with_bedrock(audio_bytes: bytes, prompt: str) -> str:
+    """
+    Process audio using AWS services (Transcribe + Bedrock)
+    Since Bedrock doesn't directly support audio, we use Transcribe first
+    """
+    import boto3
+    import json
+    import time
+    import uuid
+    
+    # Upload audio to S3 first
+    audio_key = f"temp-audio/{uuid.uuid4()}.wav"
+    s3_client.put_object(Bucket=bucket_name, Key=audio_key, Body=audio_bytes)
+    
+    # Use AWS Transcribe to convert audio to text
+    if aws_access_key_id_str and aws_secret_access_key_str:
+        transcribe_client = boto3.client(
+            'transcribe',
+            aws_access_key_id=aws_access_key_id_str,
+            aws_secret_access_key=aws_secret_access_key_str,
+            region_name=aws_region
+        )
+    else:
+        transcribe_client = boto3.client('transcribe', region_name=aws_region)
+    
+    job_name = f"transcribe-job-{uuid.uuid4()}"
+    job_uri = f"s3://{bucket_name}/{audio_key}"
+    
+    try:
+        # Start transcription job
+        transcribe_client.start_transcription_job(
+            TranscriptionJobName=job_name,
+            Media={'MediaFileUri': job_uri},
+            MediaFormat='wav',
+            LanguageCode='en-US'
+        )
+        
+        # Wait for completion
+        while True:
+            status = transcribe_client.get_transcription_job(TranscriptionJobName=job_name)
+            if status['TranscriptionJob']['TranscriptionJobStatus'] in ['COMPLETED', 'FAILED']:
+                break
+            time.sleep(5)
+        
+        if status['TranscriptionJob']['TranscriptionJobStatus'] == 'COMPLETED':
+            # Get transcript
+            transcript_uri = status['TranscriptionJob']['Transcript']['TranscriptFileUri']
+            import requests
+            transcript_response = requests.get(transcript_uri)
+            transcript_data = transcript_response.json()
+            transcript_text = transcript_data['results']['transcripts'][0]['transcript']
+            
+            # Process transcript with Bedrock
+            full_prompt = f"{prompt}\n\nTranscript: {transcript_text}"
+            return get_summary_with_llm("", full_prompt)
+        else:
+            raise Exception("Transcription failed")
+    
+    finally:
+        # Cleanup
+        s3_client.delete_object(Bucket=bucket_name, Key=audio_key)
+        try:
+            transcribe_client.delete_transcription_job(TranscriptionJobName=job_name)
+        except:
+            pass
 
 def get_summary_with_llm(content: str, task_description: str = "summarize") -> str:
     """
@@ -1709,7 +1870,7 @@ async def create_img_component(flow_id: str = Form(...), file: UploadFile = File
                 "mime_type": file.content_type,
                 "type": "image",
                 "base64_image": image_base64,
-                "processing_type": "gemini",
+                "processing_type": llm_provider.lower(),
             }
 
             component_id = component_collection.insert_one(component_metadata).inserted_id
@@ -1811,9 +1972,16 @@ async def create_img_component(flow_id: str = Form(...), file: UploadFile = File
                 - Maintain the format with double curly braces `{{` and `}}` as shown in the format.
                 """
                 
-        response = model.generate_content(contents=[template, image_part])
+        if llm_provider.lower() == "bedrock":
+            response_text = process_image_with_bedrock(contents, template)
+        else:
+            # Use Google model
+            if model is None:
+                raise HTTPException(status_code=500, detail="Google models not initialized. Please configure Google credentials or use bedrock provider.")
+            response = model.generate_content(contents=[template, image_part])
+            response_text = response.text
 
-        response_json = response.text
+        response_json = response_text
         response_json =  response_json.replace("```json", "").replace("```", "").replace("\n", "").strip()
         response_json = json.loads(response_json)
         
@@ -1823,7 +1991,7 @@ async def create_img_component(flow_id: str = Form(...), file: UploadFile = File
             "flow_id": flow_id,
             "name": file.filename,
             "type": "image",
-            "processing_type": "gemini",
+            "processing_type": llm_provider.lower(),
             "mindmap_json": response_json,
         }
 
@@ -1882,7 +2050,7 @@ async def create_audio_component(
                 "mime_type": file.content_type,
                 "type": "audio",
                 "base64_audio": audio_base64,
-                "processing_type": "gemini",
+                "processing_type": llm_provider.lower(),
             }
 
             component_id = component_collection.insert_one(component_metadata).inserted_id
@@ -1983,9 +2151,16 @@ async def create_audio_component(
                 - Maintain the format with double curly braces `{{` and `}}` as shown in the format.
                 """
 
-        response = model.generate_content(contents=[template, audio_part])
+        if llm_provider.lower() == "bedrock":
+            response_text = process_audio_with_bedrock(contents, template)
+        else:
+            # Use Google model
+            if model is None:
+                raise HTTPException(status_code=500, detail="Google models not initialized. Please configure Google credentials or use bedrock provider.")
+            response = model.generate_content(contents=[template, audio_part])
+            response_text = response.text
 
-        response_json = response.text
+        response_json = response_text
         response_json =  response_json.replace("```json", "").replace("```", "").replace("\n", "").strip()
         response_json = json.loads(response_json); 
         print(response_json)
@@ -1994,7 +2169,7 @@ async def create_audio_component(
             "flow_id": ObjectId(flow_id),
             "name": file.filename,
             "type": "audio",
-            "processing_type": "gemini",
+            "processing_type": llm_provider.lower(),
             "mindmap_json": response_json,
         }
 
@@ -2028,7 +2203,7 @@ def create_youtube_component(
                 "flow_id": ObjectId(flow_id),
                 "youtube_url": youtube_url,
                 "type": "youtube",
-                "processing_type": "gemini",
+                "processing_type": llm_provider.lower(),
             }
 
             component_id = component_collection.insert_one(component_metadata).inserted_id
@@ -2144,7 +2319,7 @@ def create_youtube_component(
             "flow_id": ObjectId(flow_id),
             "youtube_url": youtube_url,
             "type": "youtube",
-            "processing_type": "gemini",
+            "processing_type": llm_provider.lower(),
             "mindmap_json": response_json,
         }
 
@@ -2213,7 +2388,7 @@ async def create_video_component(
                 "mime_type": file.content_type,
                 "type": "video",
                 "video_url": video_url,
-                "processing_type": "gemini",
+                "processing_type": llm_provider.lower(),
             }
 
             component_id = component_collection.insert_one(component_metadata).inserted_id
@@ -2331,7 +2506,7 @@ async def create_video_component(
             "flow_id": ObjectId(flow_id),
             "video_url": video_url,
             "type": "video",
-            "processing_type": "gemini",
+            "processing_type": llm_provider.lower(),
             "mindmap_json": response_json,
         }
 

@@ -46,6 +46,7 @@ If deploying on EC2, create an IAM role with the following permissions:
             ],
             "Resource": [
                 "arn:aws:bedrock:*::foundation-model/anthropic.claude-3-haiku-20240307-v1:0",
+                "arn:aws:bedrock:*::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0",
                 "arn:aws:bedrock:*::foundation-model/amazon.titan-embed-text-v1"
             ]
         },
@@ -76,6 +77,15 @@ If deploying on EC2, create an IAM role with the following permissions:
                 "textract:GetDocumentAnalysis"
             ],
             "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "transcribe:StartTranscriptionJob",
+                "transcribe:GetTranscriptionJob",
+                "transcribe:DeleteTranscriptionJob"
+            ],
+            "Resource": "*"
         }
     ]
 }
@@ -85,12 +95,20 @@ If deploying on EC2, create an IAM role with the following permissions:
 
 Ensure you have access to the following models in AWS Bedrock:
 - `anthropic.claude-3-haiku-20240307-v1:0` (for text generation)
+- `anthropic.claude-3-sonnet-20240229-v1:0` (for multimodal - images + text)
 - `amazon.titan-embed-text-v1` (for embeddings)
+
+**For multimodal features (image/audio processing), you also need:**
+- AWS Transcribe (for audio processing)
+- S3 bucket access (for temporary file storage)
 
 To request access:
 1. Go to AWS Bedrock console
 2. Navigate to "Model access" in the left sidebar
-3. Request access to Anthropic Claude 3 Haiku and Amazon Titan Embed models
+3. Request access to:
+   - Anthropic Claude 3 Haiku
+   - Anthropic Claude 3 Sonnet (for vision capabilities)
+   - Amazon Titan Embed models
 
 ### 4. S3 Bucket Setup
 
@@ -111,9 +129,19 @@ To test if AWS Bedrock is working correctly:
 ## Model Configuration
 
 The current configuration uses:
-- **LLM Model**: `anthropic.claude-3-haiku-20240307-v1:0`
+- **Text LLM Model**: `anthropic.claude-3-haiku-20240307-v1:0`
+- **Multimodal LLM Model**: `anthropic.claude-3-sonnet-20240229-v1:0` (for image processing)
 - **Embedding Model**: `amazon.titan-embed-text-v1`
+- **Audio Processing**: AWS Transcribe + Claude (for audio files)
 - **Region**: Configurable via `aws_region` environment variable
+
+## Multimodal Capabilities with AWS Bedrock
+
+AWS Bedrock now supports:
+✅ **Image Processing**: Claude 3 Sonnet can analyze images and generate summaries
+✅ **Audio Processing**: AWS Transcribe + Claude for audio file analysis
+❌ **Video Processing**: Not directly supported (falls back to Google models if available)
+❌ **YouTube Processing**: Not directly supported (falls back to Google models if available)
 
 ## Switching Between Providers
 
@@ -125,9 +153,23 @@ You can easily switch between OpenAI and AWS Bedrock by changing the `llm_provid
 ## Limitations
 
 When using AWS Bedrock:
-1. SQL and CSV bots still use OpenAI (Vanna library limitation)
-2. Some advanced OpenAI Assistant API features are replaced with direct LLM calls
-3. File processing may have different token limits compared to OpenAI
+1. **SQL and CSV bots** still use OpenAI (Vanna library limitation)
+2. **OpenAI Assistant API features** are replaced with direct LLM calls
+3. **Token limits** may differ from OpenAI
+4. **Video processing** (YouTube, video files) requires Google models (not supported by Bedrock yet)
+5. **Audio processing** uses AWS Transcribe + Claude (additional latency)
+6. **Image processing** uses Claude 3 Sonnet (more expensive than Haiku but supports vision)
+
+## Feature Comparison
+
+| Feature | OpenAI | AWS Bedrock | Google Models |
+|---------|--------|-------------|---------------|
+| Text Processing | ✅ GPT-4o | ✅ Claude Haiku | ✅ Gemini |
+| Image Processing | ❌ | ✅ Claude Sonnet | ✅ Gemini Vision |
+| Audio Processing | ❌ | ✅ Transcribe + Claude | ✅ Gemini Audio |
+| Video Processing | ❌ | ❌ | ✅ Gemini Video |
+| YouTube Processing | ❌ | ❌ | ✅ Vertex AI |
+| Document Processing | ✅ Assistant API | ✅ Direct calls | ✅ Direct calls |
 
 ## Troubleshooting
 

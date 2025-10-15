@@ -1,7 +1,6 @@
 # ===================================================================
 # OPTIMIZED REQUIREMENTS FOR PYTHON 3.11
 # Tested and validated for compatibility
-# Removed unused packages to reduce installation time and conflicts
 # ===================================================================
 
 # Core FastAPI and Web Framework
@@ -109,8 +108,7 @@ setuptools>=65.0.0
 # rich==13.9.4
 
 # ===================================================================
-# COMMENTED OUT UNUSED PACKAGES (from original requirements.txt)
-# Uncomment only if specifically needed
+# COMMENTED OUT UNUSED PACKAGES
 # ===================================================================
 
 # Data Visualization (not used in current implementation)
@@ -159,15 +157,3 @@ setuptools>=65.0.0
 # Terminal/CLI Enhancements (not needed for server)
 # colorama==0.4.6
 # coloredlogs==15.0.1
-
-# OpenTelemetry (monitoring - not used)
-# opentelemetry-api==1.29.0
-# opentelemetry-exporter-otlp-proto-common==1.29.0
-# opentelemetry-exporter-otlp-proto-grpc==1.29.0
-# opentelemetry-instrumentation==0.50b0
-# opentelemetry-instrumentation-asgi==0.50b0
-# opentelemetry-instrumentation-fastapi==0.50b0
-# opentelemetry-proto==1.29.0
-# opentelemetry-sdk==1.29.0
-# opentelemetry-semantic-conventions==0.50b0
-# opentelemetry-util-http==0.50b0

@@ -1,0 +1,124 @@
+# Core FastAPI and Web Framework
+fastapi==0.115.6
+uvicorn==0.34.0
+starlette==0.41.3
+python-multipart==0.0.20
+
+# Database
+pymongo==4.10.1
+
+# AWS Services
+boto3==1.35.90
+botocore==1.35.90
+amazon-textract-response-parser==1.0.3
+
+# LangChain Core
+langchain==0.3.13
+langchain-core==0.3.28
+langchain-community==0.3.13
+langchain-openai==0.2.14
+langchain-aws==0.2.6
+langchain-chroma==0.2.0
+langchain-text-splitters==0.3.4
+langchain-experimental==0.3.4
+
+# Vector Database
+chromadb==0.5.23
+chroma-hnswlib==0.7.6
+
+# OpenAI
+openai==1.58.1
+tiktoken==0.8.0
+
+# Google Cloud (Optional - for multimodal features)
+google-generativeai==0.8.3
+google-cloud-aiplatform==1.85.0
+google-auth==2.37.0
+google-oauth2-tool==0.0.3
+
+# Document Processing
+unstructured==0.17.2
+pypdfium2==4.30.1
+camelot-py==0.11.0
+python-docx==1.1.2
+python-pptx==1.0.2
+pypdf==5.1.0
+
+# Data Processing
+pandas==2.2.3
+numpy==1.26.4
+
+# Web Scraping
+crawl4ai==0.4.247
+beautifulsoup4==4.12.3
+requests==2.32.3
+
+# SQL/Database Tools
+vanna[chromadb,openai]==0.5.5
+# sqlite3 is built-in with Python
+
+# Utilities
+python-dotenv==1.0.1
+pydantic==2.9.2
+pydantic-settings==2.7.0
+
+# Image Processing
+pillow==10.4.0
+opencv-python==4.11.0.86
+
+# Audio/Video Processing (Optional)
+# youtube-transcript-api==1.0.2
+
+# Development and Testing
+# pytest==8.3.4
+# pytest-mockito==0.0.4
+
+# CORS (built into FastAPI)
+# fastapi-cors is not needed - using fastapi.middleware.cors
+
+# JSON Processing
+orjson==3.10.12
+
+# Async Support
+aiofiles==24.1.0
+httpx==0.28.1
+
+# Markdown Processing
+markdown==3.7
+
+# Environment Variables
+python-dotenv==1.0.1
+
+# Logging and Monitoring (Optional)
+# rich==13.9.4
+
+# Commented out unused packages:
+# altair==5.5.0  # Data visualization - not used
+# arabic-reshaper==3.0.0  # Arabic text - not used
+# bcrypt==4.2.1  # Password hashing - not used
+# cohere==5.13.8  # Cohere API - not used
+# colorama==0.4.6  # Terminal colors - not used
+# coloredlogs==15.0.1  # Colored logging - not used
+# cryptography==44.0.0  # Crypto - may be dependency
+# emoji==2.14.0  # Emoji support - not used
+# Flask==3.1.0  # Flask framework - not used (using FastAPI)
+# geopandas==1.0.1  # Geographic data - not used
+# huggingface-hub==0.27.0  # HuggingFace - not used
+# kubernetes==31.0.0  # Kubernetes client - not used
+# lida==0.0.14  # Data visualization - not used
+# litellm==1.59.0  # LLM proxy - not used
+# matplotlib==3.10.0  # Plotting - not used
+# nltk==3.9.1  # NLP toolkit - not used
+# onnx==1.17.0  # ONNX models - not used
+# onnxruntime==1.20.1  # ONNX runtime - not used
+# plotly==5.24.1  # Interactive plots - not used
+# playwright==1.49.1  # Browser automation - not used
+# posthog==3.7.4  # Analytics - not used
+# pytesseract==0.3.13  # OCR - not used
+# qrcode==8.0  # QR codes - not used
+# scipy==1.15.1  # Scientific computing - not used
+# seaborn==0.13.2  # Statistical plots - not used
+# torch==2.5.1  # PyTorch - not used
+# torchvision==0.20.1  # Computer vision - not used
+# transformers==4.46.3  # Transformers - not used
+# wordcloud==1.9.4  # Word clouds - not used
