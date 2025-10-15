@@ -1,0 +1,58 @@
+# ===================================================================
+# MINIMAL REQUIREMENTS - CORE FUNCTIONALITY ONLY
+# This file contains only essential packages to get the app running
+# ===================================================================
+
+# Core Dependencies - Install these first
+typing-extensions>=4.12.2
+pydantic>=2.10.0,<3.0.0
+pydantic-settings>=2.7.0,<3.0.0
+
+# Core FastAPI and Web Framework
+fastapi>=0.115.0,<0.116.0
+uvicorn[standard]>=0.34.0,<0.35.0
+starlette>=0.41.0,<0.42.0
+python-multipart>=0.0.20,<1.0.0
+
+# Database
+pymongo>=4.10.0,<5.0.0
+
+# AWS Services
+boto3>=1.35.0,<2.0.0
+botocore>=1.35.0,<2.0.0
+
+# Core Utilities
+python-dotenv>=1.0.0,<2.0.0
+
+# Basic Document Processing
+pypdf>=5.1.0,<6.0.0
+python-docx>=1.1.0,<2.0.0
+
+# Data Processing
+pandas>=2.2.0,<3.0.0
+numpy>=1.26.0,<2.0.0
+
+# Web Requests
+requests>=2.32.0,<3.0.0
+httpx>=0.28.0,<1.0.0
+
+# JSON Processing
+orjson>=3.10.0,<4.0.0
+
+# Async Support
+aiofiles>=24.1.0,<25.0.0
+
+# Additional Dependencies
+certifi>=2024.12.0
+charset-normalizer>=3.4.0,<4.0.0
+idna>=3.10.0,<4.0.0
+urllib3>=2.3.0,<3.0.0
+six>=1.17.0,<2.0.0
+setuptools>=65.0.0
+
+# ===================================================================
+# INSTALLATION NOTES:
+# 1. Install this first to get basic functionality working
+# 2. Then add additional packages as needed
+# 3. This avoids complex dependency conflicts
+# ===================================================================

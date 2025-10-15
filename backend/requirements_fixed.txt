@@ -1,0 +1,99 @@
+# ===================================================================
+# FIXED REQUIREMENTS - DEPENDENCY CONFLICTS RESOLVED
+# Updated to resolve pydantic and other version conflicts
+# ===================================================================
+
+# Core FastAPI and Web Framework
+fastapi>=0.115.0,<0.116.0
+uvicorn[standard]>=0.34.0,<0.35.0
+starlette>=0.41.0,<0.42.0
+python-multipart>=0.0.20,<1.0.0
+
+# Database
+pymongo>=4.10.0,<5.0.0
+
+# AWS Services
+boto3>=1.35.0,<2.0.0
+botocore>=1.35.0,<2.0.0
+amazon-textract-response-parser>=1.0.0,<2.0.0
+
+# Core Utilities (Updated pydantic to resolve conflicts)
+python-dotenv>=1.0.0,<2.0.0
+pydantic>=2.10.0,<3.0.0
+pydantic-settings>=2.7.0,<3.0.0
+
+# LangChain Core (Compatible versions)
+langchain>=0.3.0,<0.4.0
+langchain-core>=0.3.0,<0.4.0
+langchain-community>=0.3.0,<0.4.0
+langchain-openai>=0.2.0,<0.3.0
+langchain-aws>=0.2.0,<0.3.0
+langchain-chroma>=0.2.0,<0.3.0
+langchain-text-splitters>=0.3.0,<0.4.0
+langchain-experimental>=0.3.0,<0.4.0
+
+# Vector Database
+chromadb>=0.5.0,<0.6.0
+chroma-hnswlib>=0.7.0,<0.8.0
+
+# OpenAI
+openai>=1.58.0,<2.0.0
+tiktoken>=0.8.0,<1.0.0
+
+# Google Cloud (Optional - compatible versions)
+google-generativeai>=0.8.0,<1.0.0
+google-cloud-aiplatform>=1.80.0,<2.0.0
+google-auth>=2.30.0,<3.0.0
+
+# Document Processing
+unstructured>=0.17.0,<0.18.0
+pypdfium2>=4.30.0,<5.0.0
+camelot-py>=0.11.0,<1.0.0
+python-docx>=1.1.0,<2.0.0
+python-pptx>=1.0.0,<2.0.0
+pypdf>=5.1.0,<6.0.0
+
+# Data Processing
+pandas>=2.2.0,<3.0.0
+numpy>=1.26.0,<2.0.0
+
+# Web Scraping (Updated to compatible version)
+crawl4ai>=0.4.200,<0.5.0
+beautifulsoup4>=4.12.0,<5.0.0
+requests>=2.32.0,<3.0.0
+
+# SQL/Database Tools
+vanna[chromadb,openai]>=0.5.0,<1.0.0
+
+# Image Processing
+pillow>=10.4.0,<11.0.0
+opencv-python>=4.11.0,<5.0.0
+
+# JSON Processing
+orjson>=3.10.0,<4.0.0
+
+# Async Support
+aiofiles>=24.1.0,<25.0.0
+httpx>=0.28.0,<1.0.0
+
+# Markdown Processing
+markdown>=3.7.0,<4.0.0
+
+# Text Processing
+textract-trp>=0.1.0,<1.0.0
+
+# Additional Dependencies
+typing-extensions>=4.12.2
+certifi>=2024.12.0
+charset-normalizer>=3.4.0,<4.0.0
+idna>=3.10.0,<4.0.0
+urllib3>=2.3.0,<3.0.0
+six>=1.17.0,<2.0.0
+setuptools>=65.0.0
+
+# ===================================================================
+# INSTALLATION NOTES:
+# 1. This version resolves the pydantic>=2.10 requirement from crawl4ai
+# 2. Uses compatible version ranges to prevent future conflicts
+# 3. All packages tested for Python 3.11 compatibility
+# ===================================================================
